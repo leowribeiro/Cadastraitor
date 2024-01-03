@@ -1,4 +1,16 @@
 
+''' 
+------------------------------------------------------------------
+
+Cadastraitor v0.50b
+Ferramenta para automação do processo de inclusão de aluno da UTFPR no SEI.
+03/01/2024
+Leonardo W. Ribeiro
+
+------------------------------------------------------------------
+'''
+
+
 import tkinter as tk
 import tkinter.ttk as ttk
 import tkinter.messagebox as tkmb
