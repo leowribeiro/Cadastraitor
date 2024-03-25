@@ -21,7 +21,7 @@ import keyboard
 import shutil
 import os
 
-from Aluno import *
+from Usuario import *
 
 
 class Robot(webdriver.Chrome) :
@@ -32,7 +32,6 @@ class Robot(webdriver.Chrome) :
 		chrome_service.creation_flags = CREATE_NO_WINDOW
 
 		super().__init__(service=chrome_service)
-		#super().__init__()
 		self.getAuth = None
 		self.maximize_window()
 		self.implicitly_wait(0.3)
@@ -308,32 +307,45 @@ class Robot(webdriver.Chrome) :
 			self.getInativos(alunos)
 			self.getAtivos(alunos)
 		
-		return alunos
-
-	def getStatusAlunos_REGULAR(self, raList):
+		return alunos		
+	
+	
+	def getStatusUsuarios(self, listaCods):
 		
-		alunos = []
+		usuarios = []
 		
-		for ra in raList:
-			novoAluno = Aluno()
-			novoAluno.RA.set(ra)
-			alunos.append(novoAluno)
+		for codUsuario in listaCods:
+		
+			novoUsuario = Usuario()
+			if "." in codUsuario :
+				novoUsuario.CPF.set(codUsuario)
+				novoUsuario.externo = True
+			elif codUsuario[-1] == "*" :
+				novoUsuario.RA.set(codUsuario)
+				novoUsuario.especial = True
+			else:
+				novoUsuario.RA.set(codUsuario)
+				
+			usuarios.append(novoUsuario)
 		
 		self.logInSistemasCorporativos()
 		
 		atLeastOne = False
 		
-		for aluno in alunos :
+		for usuario in usuarios :
+		
+			if usuario.externo :
+				next
 		
 			self.get("https://sistemas2.utfpr.edu.br/dpls/sistema/acad01/mpdeclaracoes.inicioconsulta")
 			
 			# preenche o RA do aluno na caixa de texto "Aluno"
-			self.find_element(By.ID, "p_pessoa").send_keys(aluno.RA.get())
+			self.find_element(By.ID, "p_pessoa").send_keys(usuario.RA.get())
 			AC = ActionChains(self)
 			AC.send_keys(Keys.ENTER)
 			AC.perform()
 			
-			print("working on " + aluno.RA.get())
+			print("working on " + usuario.RA.get())
 			
 			
 			# esse while abaixo lida com os elementos select da página de informações do aluno
@@ -347,7 +359,7 @@ class Robot(webdriver.Chrome) :
 				# contador watchdog, se exceder o número de loops, aluno é considerado inexistente
 				loopCounter = loopCounter + 1
 				if loopCounter > 10 :
-					aluno.status = "INEXISTENTE"
+					usuario.status = "INEXISTENTE"
 					break
 				
 				cursoIndex = cursoIndex + 1
@@ -363,7 +375,7 @@ class Robot(webdriver.Chrome) :
 					selectCurso.select_by_index(cursoIndex)
 				except:
 					if self.find_element(By.XPATH, "//div[@id='divcombopessoa']").text == "Nenhum registro encontrado!" :
-						aluno.status = "INEXISTENTE"
+						usuario.status = "INEXISTENTE"
 						break
 
 				# select "Ano/Período"
@@ -417,7 +429,7 @@ class Robot(webdriver.Chrome) :
 			
 			# aluno existe e é possível gerar declaração para um curso "Regular"
 			
-			if aluno.status != "INEXISTENTE" :
+			if usuario.status != "INEXISTENTE" :
 			
 				self.find_element(By.XPATH, "//button[@id='btnProcurar1']").click()
 
@@ -430,8 +442,8 @@ class Robot(webdriver.Chrome) :
 					)
 				
 					time.sleep(1.5)
-					fotoElement.screenshot(aluno.RA.get() + "face.png")
-					aluno.hasPic = True
+					fotoElement.screenshot(usuario.RA.get() + "face.png")
+					usuario.hasPic = True
 				except:
 					pass
 
@@ -450,7 +462,7 @@ class Robot(webdriver.Chrome) :
 				self.set_window_position(0, 0)
 				self.set_window_size(943, 1000)
 				table = self.find_element(By.XPATH, "//table")
-				table.screenshot(aluno.RA.get() + ".png")
+				table.screenshot(usuario.RA.get() + ".png")
 				
 				# tome as informações listadas e atualize os atributos do aluno
 				# atenção: é possível que este código interprete mal os dados
@@ -462,46 +474,46 @@ class Robot(webdriver.Chrome) :
 				
 					if splitted[0] == "Discente" :
 						word = splitted[1].split("-")
-						aluno.nome.set(word[1][1:None])
+						usuario.nome.set(word[1][1:None])
 					elif splitted[0] == "CPF":
-						aluno.CPF.set(splitted[1][1:None])
+						usuario.CPF.set(splitted[1][1:None])
 					elif splitted[0] == "RG":
 						word = splitted[1].split(" ")
 						for element in word:
 							if element != "" :
 								if element[0] == "[" :
-									aluno.SSP.set(element[0][1:-1])
+									usuario.SSP.set(element[0][1:-1])
 								else:
-									aluno.RG.set(element)
+									usuario.RG.set(element)
 						
-						if aluno.SSP.get() == "":
-							aluno.SSP.set("SSP")
+						if usuario.SSP.get() == "":
+							usuario.SSP.set("SSP")
 					
 					elif splitted[0] == "E-mail de Preferência":
-						aluno.email.set(splitted[1][1:None])
+						usuario.email.set(splitted[1][1:None])
 					elif splitted[0] == "País":
-						aluno.pais.set(splitted[1][1:None])
+						usuario.pais.set(splitted[1][1:None])
 					elif splitted[0] == "UF":
-						aluno.UF.set(splitted[1][1:None])
+						usuario.UF.set(splitted[1][1:None])
 					elif splitted[0] == "Município":
-						aluno.cidade.set(splitted[1][1:None])
+						usuario.cidade.set(splitted[1][1:None])
 					elif splitted[0] == "Logradouro/Número":
-						aluno.endereco.set(splitted[1][1:None])
+						usuario.endereco.set(splitted[1][1:None])
 					elif splitted[0] == "Complemento":
-						aluno.complemento.set(splitted[1][1:None])
+						usuario.complemento.set(splitted[1][1:None])
 					elif splitted[0] == "Bairro":
-						aluno.bairro.set(splitted[1][1:None])
+						usuario.bairro.set(splitted[1][1:None])
 					elif splitted[0] == "CEP":
-						aluno.CEP.set(splitted[1][1:None])
+						usuario.CEP.set(splitted[1][1:None])
 					elif splitted[0] == "Telefone":
-						if aluno.telefoneCelular.get() == "":
-							aluno.telefoneCelular.set(splitted[1][1:None])
-						elif aluno.telefoneResidencial.get() == "" :
-							aluno.telefoneResidencial.set(splitted[1][1:None])
-						elif aluno.telefoneComercial.get() == "":
-							aluno.telefoneComercial.set(splitted[1][1:None])
+						if usuario.telefoneCelular.get() == "":
+							usuario.telefoneCelular.set(splitted[1][1:None])
+						elif usuario.telefoneResidencial.get() == "" :
+							usuario.telefoneResidencial.set(splitted[1][1:None])
+						elif usuario.telefoneComercial.get() == "":
+							usuario.telefoneComercial.set(splitted[1][1:None])
 
-				aluno.status = "INFO COLETADA"
+				usuario.status = "INFO COLETADA"
 				atLeastOne = True
 
 				# fecha a janela e retorna ao contexto original
@@ -513,10 +525,10 @@ class Robot(webdriver.Chrome) :
 			self.logInSEI()
 			
 			# a ordem das duas linhas abaixo importa, não mexa!
-			self.getInativos(alunos)
-			self.getAtivos(alunos)
+			self.getInativos(usuarios)
+			self.getAtivos(usuarios)
 		
-		return alunos
+		return usuarios
 
 	def getInativos(self, alunos):
 		
@@ -544,7 +556,7 @@ class Robot(webdriver.Chrome) :
 					aluno.status = td[3].text.upper()
 				except:
 					continue
-						
+	
 	def getAtivos(self, alunos):
 	
 		self.changeUnidadeToF_DIRGRAD()
@@ -597,6 +609,8 @@ class Robot(webdriver.Chrome) :
 					time.sleep(0.1)
 				
 				self.switch_to.window(self.window_handles[1])
+			
+				time.sleep(4)
 			
 				AC = ActionChains(self)
 				AC.send_keys(Keys.TAB)
