@@ -28,7 +28,6 @@ class Usuario :
 		self.facePic = None
 		self.cadastrar = tk.StringVar(value="0")
 		self.externo = False
-		self.especial = False
 
 	def print(self):
 		print(":::" + self.nome.get() + ":::")

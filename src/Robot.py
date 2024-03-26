@@ -21,6 +21,12 @@ import keyboard
 import shutil
 import os
 
+import tkinter as tk
+import tkinter.ttk as ttk
+import tkinter.messagebox as tkmb
+
+import re
+
 from Usuario import *
 
 
@@ -38,6 +44,8 @@ class Robot(webdriver.Chrome) :
 		
 		self.loggedInSEI = False
 		self.loggedInSC = False
+		
+		self.root = None
 		
 		self.windowHandle = self.current_window_handle
 	
@@ -169,147 +177,6 @@ class Robot(webdriver.Chrome) :
 					td.click()
 					break
 
-	def getStatusAlunos_ESPECIAL(self, raList, app):
-		
-		alunos = []
-		
-		for ra in raList:
-			novoAluno = Aluno()
-			novoAluno.RA.set(ra)
-			alunos.append(novoAluno)
-		
-		self.logInSistemasCorporativos()
-		
-		atLeastOne = False
-		
-		for aluno in alunos :
-		
-			self.get("https://sistemas2.utfpr.edu.br/dpls/sistema/acad01/mpdeclaracoes.inicioconsulta")
-			
-			# preenche o RA do aluno na caixa de texto "Aluno"
-			self.find_element(By.ID, "p_pessoa").send_keys(aluno.RA.get())
-			AC = ActionChains(self)
-			AC.send_keys(Keys.ENTER)
-			AC.perform()
-			
-			print("working on " + aluno.RA.get())
-			
-			# na forma especial, o algoritmo não tenta detectar o provavel curso do aluno
-			# ao invés disso o usuário precisa selecionar manualmente, sendo que é possível
-			# que o RA seja inválido
-			# depois de selecionar as opções apropriadas, o usuário deve clicar em "Sim" se o
-			# RA é válido ou "Não" se não for.
-			
-			resp = tkmb.Message(app.root, message="Aluno existe?", type=tkmb.YESNO, icon=tkmb.WARNING, title="CONTINUAR?").show()
-			app.root.update()
-			
-			if resp == tkmb.NO:
-				aluno.status = "INEXISTENTE"
-			
-			# aluno existe e é possível gerar declaração para um curso "Regular"
-			
-			if aluno.status != "INEXISTENTE" :
-			
-				self.find_element(By.XPATH, "//button[@id='btnProcurar1']").click()
-
-				# tente encontrar a foto do aluno
-				# se existe, faça o screenshot
-				# se não existe, marque aluno sem foto e segue a vida
-				try:
-					fotoElement = WebDriverWait(self, 2).until(
-						EC.presence_of_element_located((By.XPATH, "//img[@alt='Foto']"))
-					)
-				
-					time.sleep(1.5)
-					fotoElement.screenshot(aluno.RA.get() + "face.png")
-					aluno.hasPic = True
-				except:
-					pass
-
-				# clique em "Gerar Declaração com Hash Validação"
-				self.find_element(By.XPATH, "//button[@id='bt_geraDeclaracao']").click()
-				
-				
-				
-				# aguarde a nova janela abrir e mude o contexto para ela, salvando o contexto original
-				original_window = self.current_window_handle
-				while len(self.window_handles) < 2:
-					time.sleep(0.1)
-				self.switch_to.window(self.window_handles[1])
-				
-				# reposicione, redimensione e tire o screenshot da janela
-				self.set_window_position(0, 0)
-				self.set_window_size(943, 1000)
-				table = self.find_element(By.XPATH, "//table")
-				table.screenshot(aluno.RA.get() + ".png")
-				
-				# tome as informações listadas e atualize os atributos do aluno
-				# atenção: é possível que este código interprete mal os dados
-				# isso porque nem sempre os dados seguem o padrão presumido
-				data = table.text.split("\n")
-				
-				for line in data :
-					splitted = line.split(":")
-				
-					if splitted[0] == "Discente" :
-						word = splitted[1].split("-")
-						aluno.nome.set(word[1][1:None])
-					elif splitted[0] == "CPF":
-						aluno.CPF.set(splitted[1][1:None])
-					elif splitted[0] == "RG":
-						word = splitted[1].split(" ")
-						for element in word:
-							if element != "" :
-								if element[0] == "[" :
-									aluno.SSP.set(element[0][1:-1])
-								else:
-									aluno.RG.set(element)
-						
-						if aluno.SSP.get() == "":
-							aluno.SSP.set("SSP")
-					
-					elif splitted[0] == "E-mail de Preferência":
-						aluno.email.set(splitted[1][1:None])
-					elif splitted[0] == "País":
-						aluno.pais.set(splitted[1][1:None])
-					elif splitted[0] == "UF":
-						aluno.UF.set(splitted[1][1:None])
-					elif splitted[0] == "Município":
-						aluno.cidade.set(splitted[1][1:None])
-					elif splitted[0] == "Logradouro/Número":
-						aluno.endereco.set(splitted[1][1:None])
-					elif splitted[0] == "Complemento":
-						aluno.complemento.set(splitted[1][1:None])
-					elif splitted[0] == "Bairro":
-						aluno.bairro.set(splitted[1][1:None])
-					elif splitted[0] == "CEP":
-						aluno.CEP.set(splitted[1][1:None])
-					elif splitted[0] == "Telefone":
-						if aluno.telefoneCelular.get() == "":
-							aluno.telefoneCelular.set(splitted[1][1:None])
-						elif aluno.telefoneResidencial.get() == "" :
-							aluno.telefoneResidencial.set(splitted[1][1:None])
-						elif aluno.telefoneComercial.get() == "":
-							aluno.telefoneComercial.set(splitted[1][1:None])
-
-				aluno.status = "INFO COLETADA"
-				atLeastOne = True
-
-				# fecha a janela e retorna ao contexto original
-				self.close()
-				self.switch_to.window(original_window)
-		
-		# se tem pelo menos um aluno existente com dados, verifique se os alunos estão ativos ou não
-		if atLeastOne :
-			self.logInSEI()
-			
-			# a ordem das duas linhas abaixo importa, não mexa!
-			self.getInativos(alunos)
-			self.getAtivos(alunos)
-		
-		return alunos		
-	
-	
 	def getStatusUsuarios(self, listaCods):
 		
 		usuarios = []
@@ -318,13 +185,10 @@ class Robot(webdriver.Chrome) :
 		
 			novoUsuario = Usuario()
 			if "." in codUsuario :
-				novoUsuario.CPF.set(codUsuario)
+				novoUsuario.CPF.set(re.sub(r"[^0-9]", "", codUsuario))
 				novoUsuario.externo = True
-			elif codUsuario[-1] == "*" :
-				novoUsuario.RA.set(codUsuario)
-				novoUsuario.especial = True
 			else:
-				novoUsuario.RA.set(codUsuario)
+				novoUsuario.RA.set(re.sub(r"[^0-9]", "", codUsuario))
 				
 			usuarios.append(novoUsuario)
 		
@@ -334,7 +198,7 @@ class Robot(webdriver.Chrome) :
 		
 		for usuario in usuarios :
 		
-			if usuario.externo :
+			if usuario.externo:
 				next
 		
 			self.get("https://sistemas2.utfpr.edu.br/dpls/sistema/acad01/mpdeclaracoes.inicioconsulta")
@@ -344,9 +208,6 @@ class Robot(webdriver.Chrome) :
 			AC = ActionChains(self)
 			AC.send_keys(Keys.ENTER)
 			AC.perform()
-			
-			print("working on " + usuario.RA.get())
-			
 			
 			# esse while abaixo lida com os elementos select da página de informações do aluno
 			# o código ainda é propenso a erros, qualquer erro nessa tela vai levar o aluno
@@ -426,6 +287,16 @@ class Robot(webdriver.Chrome) :
 				except:
 					continue
 		
+			
+			if usuario.status == "INEXISTENTE" :
+
+				answer = tkmb.Message(self.root, message="Prosseguir?", type=tkmb.YESNO, icon=tkmb.QUESTION).show()
+				
+				if tkmb.YES :
+					usuario.status = "DESCONHECIDO"
+				else:
+					usuario.status = "INEXISTENTE"
+					
 			
 			# aluno existe e é possível gerar declaração para um curso "Regular"
 			

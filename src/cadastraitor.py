@@ -278,9 +278,9 @@ class App :
 			tkmb.Message(self.root, message="Processo SEI não especificado.", type=tkmb.OK, icon=tkmb.WARNING).show()
 			return None
 		
-		userList = self.userListBox.get(0, "end")
+		listaCods = self.userListBox.get(0, "end")
 	
-		if len(userList) == 0:
+		if len(listaCods) == 0:
 			tkmb.Message(self.root, message="Lista vazia, nada a coletar.", type=tkmb.OK, icon=tkmb.WARNING).show()
 			return None
 		
@@ -295,9 +295,10 @@ class App :
 		
 		if self.bot is None:
 			self.bot = Robot()
+			self.bot.root = self.root
 			self.bot.getAuth = self.getAuth
 			
-		self.usuarios = self.bot.getStatusAlunos(userList)
+		self.usuarios = self.bot.getStatusUsuarios(listaCods)
 		
 		# returning to normal execution, avaliate if PROCESSAR button makes sense
 		self.coletarButton.config(text="COLETAR DADOS")
@@ -305,7 +306,7 @@ class App :
 		self.report()
 		
 		for usuario in self.usuarios:
-			if usurio.hasPic:
+			if usuario.hasPic:
 				usuario.facePic = ImageTk.PhotoImage(Image.open(usuario.RA.get() + "face.png"))
 		
 		self.loadUsuarioAtVerificacao(self.usuarios, self.i)
