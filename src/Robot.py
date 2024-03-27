@@ -187,19 +187,19 @@ class Robot(webdriver.Chrome) :
 			if "." in codUsuario :
 				novoUsuario.CPF.set(re.sub(r"[^0-9]", "", codUsuario))
 				novoUsuario.externo = True
+				novoUsuario.nome.set("")
 			else:
 				novoUsuario.RA.set(re.sub(r"[^0-9]", "", codUsuario))
 				
 			usuarios.append(novoUsuario)
 		
-		self.logInSistemasCorporativos()
-		
-		atLeastOne = False
+		if len(usuarios) > 0 :
+			self.logInSistemasCorporativos()
 		
 		for usuario in usuarios :
 		
 			if usuario.externo:
-				next
+				continue
 		
 			self.get("https://sistemas2.utfpr.edu.br/dpls/sistema/acad01/mpdeclaracoes.inicioconsulta")
 			
@@ -385,35 +385,26 @@ class Robot(webdriver.Chrome) :
 							usuario.telefoneComercial.set(splitted[1][1:None])
 
 				usuario.status = "INFO COLETADA"
-				atLeastOne = True
 
 				# fecha a janela e retorna ao contexto original
 				self.close()
 				self.switch_to.window(original_window)
 		
-		# se tem pelo menos um aluno existente com dados, verifique se os alunos estão ativos ou não
-		if atLeastOne :
-			self.logInSEI()
-			
-			# a ordem das duas linhas abaixo importa, não mexa!
-			self.getInativos(usuarios)
-			self.getAtivos(usuarios)
-		
 		return usuarios
 
-	def getInativos(self, alunos):
+	def getInativos(self, usuarios):
 		
 		self.changeUnidadeToF_DIRGRAD()
 		self.find_element(By.XPATH, "//span[contains(.,'Cadastro de Usuário Externo')]").click()
 		self.find_element(By.XPATH, "//a[@link='md_ce_ue_reativar']").click()
 		
-		for aluno in alunos:
+		for usuario in usuarios:
 			
-			if aluno.status == "INFO COLETADA":
+			if usuario.status == "INFO COLETADA":
 				
 				cpfField = self.find_element(By.ID, "txtCpfUsuario")
 				cpfField.clear()
-				cpfField.send_keys(aluno.CPF.get())
+				cpfField.send_keys(usuario.CPF.get())
 				self.find_element(By.ID, "btnPesquisar").click()
 				
 				try:
@@ -424,22 +415,22 @@ class Robot(webdriver.Chrome) :
 					# encontrou a tabela, agora isole o status
 					infraTrClara = self.find_element(By.XPATH, "//tr[@class='infraTrClara']")
 					td = self.find_elements(By.XPATH, "//td")
-					aluno.status = td[3].text.upper()
+					usuario.status = td[3].text.upper()
 				except:
 					continue
 	
-	def getAtivos(self, alunos):
+	def getAtivos(self, usuarios):
 	
 		self.changeUnidadeToF_DIRGRAD()
 		self.find_element(By.XPATH, "//a[@link='md_ce_ue_listar']").click()
 
-		for aluno in alunos:
+		for usuario in usuarios:
 		
-			if aluno.status == "INFO COLETADA":
+			if usuario.status == "INFO COLETADA":
 			
 				cpfField = self.find_element(By.ID, "txtCpfUsuario")
 				cpfField.clear()
-				cpfField.send_keys(aluno.CPF.get())
+				cpfField.send_keys(usuario.CPF.get())
 				self.find_element(By.ID, "btnPesquisar").click()
 				
 				try:
@@ -450,7 +441,7 @@ class Robot(webdriver.Chrome) :
 					# se a tabela existe, isole a informação do status
 					infraTrClara = self.find_element(By.XPATH, "//tr[@class='infraTrClara']")
 					td = self.find_elements(By.XPATH, "//td")
-					aluno.status = td[3].text.upper()
+					usuario.status = td[3].text.upper()
 				except:
 					continue
 				

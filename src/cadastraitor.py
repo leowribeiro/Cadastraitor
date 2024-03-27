@@ -297,17 +297,25 @@ class App :
 			self.bot = Robot()
 			self.bot.root = self.root
 			self.bot.getAuth = self.getAuth
-			
+		
 		self.usuarios = self.bot.getStatusUsuarios(listaCods)
+		
+		self.bot.logInSEI()
+		
+		# a ordem dessas duas linhas abaixo importa, não mexa!
+		self.bot.getInativos(self.usuarios)
+		self.bot.getAtivos(self.usuarios)
 		
 		# returning to normal execution, avaliate if PROCESSAR button makes sense
 		self.coletarButton.config(text="COLETAR DADOS")
-		
 		self.report()
 		
 		for usuario in self.usuarios:
 			if usuario.hasPic:
 				usuario.facePic = ImageTk.PhotoImage(Image.open(usuario.RA.get() + "face.png"))
+			elif usuario.externo:
+				usuario.facePic = self.alienFace
+		
 		
 		self.loadUsuarioAtVerificacao(self.usuarios, self.i)
 		self.notebook.tab(2, state="normal")
@@ -338,7 +346,7 @@ class App :
 			self.emailEntry.config(textvariable=usuario.email)
 			self.estrangeiroCheck.config(variable=usuario.estrangeiro)
 			
-			if usuario.hasPic :
+			if usuario.hasPic or usuario.externo :
 				self.photoLabel.config(image=usuario.facePic)
 			else:
 				self.photoLabel.config(image=self.noFace)
