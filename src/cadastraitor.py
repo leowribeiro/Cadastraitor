@@ -356,7 +356,7 @@ class App :
 			
 			self.cadastrarCheck.config(variable=usuario.cadastrar)
 			
-			if usuario.status == "INEXISTENTE" or usuario.status == "DESCONHECIDO" or usuario.status == "ATIVO":
+			if usuario.status == "INEXISTENTE" or (usuario.status == "DESCONHECIDO" and not usuario.externo) or usuario.status == "ATIVO":
 				self.cadastrarCheck.config(state = "disabled")
 			else:
 				self.cadastrarCheck.config(state = "enabled")
@@ -447,8 +447,10 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1
 				i = i - 1
-				print(string)
+				
 				# string = NOME COMPLETO
+				self.usuarios[self.i].nome.set(string)
+				
 				
 			elif tokens[i] == "Social**:":
 				string = ""
@@ -457,8 +459,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = NOME SOCIAL
+				self.usuarios[self.i].nomeSocial.set(string)
 			
 			elif tokens[i] == "CPF*:":
 				string = ""
@@ -468,7 +471,9 @@ class App :
 					i = i + 1	
 				i = i - 1
 				print(string)
+				
 				# string = CPF
+				self.usuarios[self.i].CPF.set(string)
 
 			elif tokens[i] == "RG*:":
 				string = ""
@@ -477,8 +482,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = RG			
+				self.usuarios[self.i].RG.set(string)
 				
 			elif tokens[i] == "Expedidor*:":
 				string = ""
@@ -487,8 +493,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = ORGAO EXPEDIDOR
+				self.usuarios[self.i].SSP.set(string)
 
 			elif tokens[i] == "DDD:":
 				string = ""
@@ -497,8 +504,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = TELEFONE 1
+				self.usuarios[self.i].telefoneResidencial.set(string)
 
 			elif tokens[i] == "celular:":
 				string = ""
@@ -507,8 +515,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = TELEFONE 2
+				self.usuarios[self.i].telefoneCelular.set(string)
 
 			elif tokens[i] == "Residencial*:":
 				string = ""
@@ -517,8 +526,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = ENDEREÇO
+				self.usuarios[self.i].endereco.set(string)
 
 			elif tokens[i] == "Complemento*:":
 				string = ""
@@ -527,8 +537,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = COMPLEMENTO
+				self.usuarios[self.i].complemento.set(string)
 
 			elif tokens[i] == "Bairro*:":
 				string = ""
@@ -537,8 +548,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = BAIRRO
+				self.usuarios[self.i].bairro.set(string)
 				
 			elif tokens[i] == "Estado*:":
 				string = ""
@@ -547,8 +559,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = ESTADO				
+				self.usuarios[self.i].UF.set(string)
 
 			elif tokens[i] == "Cidade*:":
 				string = ""
@@ -557,8 +570,9 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = CIDADE		
+				self.usuarios[self.i].cidade.set(string)
 
 			elif tokens[i] == "CEP*:":
 				string = ""
@@ -567,17 +581,21 @@ class App :
 					string = string + tokens[i] + " "
 					i = i + 1	
 				i = i - 1
-				print(string)
+				
 				# string = CEP
+				self.usuarios[self.i].CEP.set(string)
 
 			elif tokens[i] == "Pessoal*:":
 				string = ""
 				i = i + 1
 				string = tokens[i]
-				print(string)
-				# string = CEP
+				
+				# string = EMAIL
+				self.usuarios[self.i].email.set(string)
 
 			i = i + 1
+
+		self.usuarios[self.i].pais.set("Brasil")
 
 	def placeWidgets(self):
 		
@@ -593,7 +611,7 @@ class App :
 		verificacaoTab = ttk.Frame(notebook)
 		notebook.add(verificacaoTab, text="VERIFICAÇÃO")
 
-		#notebook.tab(2, state="disabled")
+		notebook.tab(2, state="disabled")
 		
 		relatorioTab = ttk.Frame(notebook)
 		notebook.add(relatorioTab, text="RELATÓRIO")

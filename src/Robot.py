@@ -99,17 +99,7 @@ class Robot(webdriver.Chrome) :
 	
 		if tipo == "Patrimônio: Solicitação de Transferência de Bens" :
 			self.find_element(By.ID, "btnSalvar").click()
-	
-	def incluirDocumento_ORIGINAL(self, tipo, info=""):
-		self.find_element(By.XPATH, "//img[@alt='Incluir Documento']").click()
-		self.find_element(By.LINK_TEXT, tipo).click()
 		
-		if tipo == "Patrimônio: Solicitação de Transferência de Bem":
-			self.find_element(By.ID, "btnSalvar").click()
-		elif tipo == "Cadastro Aluno UTFPR como usuário externo no SEI":
-			self.find_element(By.ID, "txtNumero").send_keys(info)
-			self.find_element(By.ID, "btnSalvar").click()
-	
 	def incluirDocumento(self, tipo, info=""):
 		
 		butt = None
@@ -193,8 +183,7 @@ class Robot(webdriver.Chrome) :
 				
 			usuarios.append(novoUsuario)
 		
-		if len(usuarios) > 0 :
-			self.logInSistemasCorporativos()
+		self.logInSistemasCorporativos()
 		
 		for usuario in usuarios :
 		
@@ -321,8 +310,6 @@ class Robot(webdriver.Chrome) :
 				# clique em "Gerar Declaração com Hash Validação"
 				self.find_element(By.XPATH, "//button[@id='bt_geraDeclaracao']").click()
 				
-				
-				
 				# aguarde a nova janela abrir e mude o contexto para ela, salvando o contexto original
 				original_window = self.current_window_handle
 				while len(self.window_handles) < 2:
@@ -400,7 +387,7 @@ class Robot(webdriver.Chrome) :
 		
 		for usuario in usuarios:
 			
-			if usuario.status == "INFO COLETADA":
+			if usuario.status == "INFO COLETADA" or usuario.externo :
 				
 				cpfField = self.find_element(By.ID, "txtCpfUsuario")
 				cpfField.clear()
@@ -426,7 +413,7 @@ class Robot(webdriver.Chrome) :
 
 		for usuario in usuarios:
 		
-			if usuario.status == "INFO COLETADA":
+			if usuario.status == "INFO COLETADA" or usuario.externo:
 			
 				cpfField = self.find_element(By.ID, "txtCpfUsuario")
 				cpfField.clear()
