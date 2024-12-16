@@ -1,0 +1,15 @@
+
+1) criptografar ou comprimir senha
+	1.1) não permitir que a senha seja visível no arquivo ini
+	1.2) é possível armazenar a chave de criptografia (gerada aleatóriamente) no registro do windows
+2) implementar a questão de quando o usuário é estrangeiro
+	2.1) usar as caixas CPF e RG como "Número do Passaporte" e "País de Emissão".
+	2.2) na aba verificação, ao clicar em "Estrangeiro", os labels CPF e RG devem mudar para "Número do Passaporte" e "País de Emissão".
+	2.3) no momento do cadastro, será necessário inicializar o valor das caixas cujo id são "txtNumeroPassaporte" e "selPaisPassaporte"
+3) mudar implementação de quando o comprovante do aluno não é encontrado
+	3.1) colocar som da fala de erro
+	3.2) implementar F8 quando encontrar e F9 para prosseguir, marcando o aluno como inexistente
+4) implementar validação de CPF
+	4.1) quando um CPF (presença do .) é inserido
+5) verificar situação quando o RG ou RA é não existente
+	5.1) certificar que isso não afete o processo
